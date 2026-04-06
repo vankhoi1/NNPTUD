@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khu vực Thủ thư - Quản lý thư viện</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Librarian Dashboard Styles */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .stat-card.warning {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .stat-card.success {
+            border-left: 4px solid #27ae60;
+        }
+
+        .stat-card.info {
+            border-left: 4px solid #3498db;
+        }
+
+        .monthly-report {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .report-section {
+            margin: 15px 0;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+            background: #ecf0f1;
+        }
+
+        .report-section h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+
+        .top-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .top-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #bdc3c7;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .top-list li:last-child {
+            border-bottom: none;
+        }
+
+        .top-list .count {
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .overdue-alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            color: #856404;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 2px solid #ecf0f1;
+            margin: 20px 0;
+        }
+
+        .tabs button {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tabs button.active {
+            border-bottom-color: #3498db;
+            color: #3498db;
+            font-weight: bold;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .member-card, .book-card {
+            padding: 15px;
+            background: white;
+            border-radius: 4px;
+            margin: 10px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .member-card h4, .book-card h4 {
+            margin: 0 0 8px 0;
+            color: #2c3e50;
+        }
+
+        .member-card p, .book-card p {
+            margin: 5px 0;
+            color: #7f8c8d;
+            font-size: 13px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.suspended {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.inactive {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .month-selector {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .month-selector select {
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>📚 Khu vực Thủ thư - Quản lý thư viện</h1>
+                <div class="user-info" id="user-info">
+                    <span id="user-name"></span>
+                    <span class="user-role" id="user-role"></span>
+                    <button class="btn btn-sm btn-secondary" onclick="logout()">Đăng xuất</button>
+                </div>
+            </div>
+            <nav>
+                <button class="nav-btn active" data-section="dashboard" id="nav-dashboard">Tổng quan</button>
+                <button class="nav-btn" data-section="members">Quản lý độc giả</button>
+                <button class="nav-btn" data-section="books">Kho sách</button>
+                <button class="nav-btn" data-section="loans">Mượn/Trả</button>
+                <button class="nav-btn" data-section="statistics" id="nav-statistics">Báo cáo tháng</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="section active">
+                <div class="section-header">
+                    <h2>📊 Tổng quan</h2>
+                    <button class="btn btn-secondary" onclick="loadDashboard()">Làm mới</button>
+                </div>
+
+                <div class="dashboard-grid" id="dashboard-grid">
+                    <div class="stat-card info">
+                        <div class="stat-label">Tổng sách</div>
+                        <div class="stat-number" id="stat-total-books">-</div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-label">Phiếu mượn đang hoạt động</div>
+                        <div class="stat-number" id="stat-active-loans">-</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-label">Phiếu mượn quá hạn</div>
+                        <div class="stat-number" id="stat-overdue">-</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-label">Tổng độc giả</div>
+                        <div class="stat-number" id="stat-total-members">-</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-label">Độc giả hoạt động</div>
+                        <div class="stat-number" id="stat-active-members">-</div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-label">Mượn hôm nay</div>
+                        <div class="stat-number" id="stat-borrowed-today">-</div>
+                    </div>
+                </div>
+
+                <div id="daily-report">
+                    <h3>Báo cáo ngày</h3>
+                    <div class="report-section" id="daily-report-content">
+                        Loading...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Member Management Section -->
+            <section id="members-section" class="section">
+                <div class="section-header">
+                    <h2>👥 Quản lý độc giả</h2>
+                    <button class="btn btn-secondary" onclick="loadMembers()">Làm mới</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="active" onclick="switchTab('members-list', this)">Tất cả độc giả</button>
+                    <button onclick="switchTab('member-suspended', this)">Bị khóa</button>
+                    <button onclick="switchTab('member-history', this)">Lịch sử độc giả</button>
+                </div>
+
+                <!-- All Members Tab -->
+                <div id="members-list" class="tab-content active">
+                    <div class="filters">
+                        <input type="text" id="member-search" placeholder="Search by name, email, or ID..." onkeyup="loadMembers()">
+                        <select id="member-type-filter" onchange="loadMembers()">
+                            <option value="">All Types</option>
+                            <option value="Student">Student</option>
+                            <option value="Teacher">Teacher</option>
+                            <option value="Staff">Staff</option>
+                            <option value="External">External</option>
+                        </select>
+                        <select id="member-status-filter" onchange="loadMembers()">
+                            <option value="">All Statuses</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                    </div>
+                    <div id="members-list-content"></div>
+                </div>
+
+                <!-- Suspended Members Tab -->
+                <div id="member-suspended" class="tab-content">
+                    <div id="suspended-content"></div>
+                </div>
+
+                <!-- Member History Tab -->
+                <div id="member-history" class="tab-content">
+                    <div class="filters">
+                        <input type="text" id="history-member-search" placeholder="Search member...">
+                        <button class="btn btn-secondary" onclick="searchMemberHistory()">Search</button>
+                    </div>
+                    <div id="history-content"></div>
+                </div>
+            </section>
+
+            <!-- Book Inventory Section -->
+            <section id="books-section" class="section">
+                <div class="section-header">
+                    <h2>📖 Kho sách</h2>
+                    <button class="btn btn-secondary" onclick="loadBooks()">Làm mới</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="active" onclick="switchTab('book-list', this)">Tất cả sách</button>
+                    <button onclick="switchTab('book-borrowed', this)">Đang được mượn</button>
+                    <button onclick="switchTab('book-history', this)">Lịch sử mượn</button>
+                </div>
+
+                <!-- All Books Tab -->
+                <div id="book-list" class="tab-content active">
+                    <div class="filters">
+                        <input type="text" id="book-search" placeholder="Search by title, author, or ISBN..." onkeyup="loadBooks()">
+                        <select id="book-category-filter" onchange="loadBooks()">
+                            <option value="">All Categories</option>
+                            <option value="Fiction">Fiction</option>
+                            <option value="Non-Fiction">Non-Fiction</option>
+                            <option value="Science">Science</option>
+                            <option value="Technology">Technology</option>
+                            <option value="History">History</option>
+                            <option value="Biography">Biography</option>
+                            <option value="Children">Children</option>
+                            <option value="Education">Education</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div id="books-list-content"></div>
+                </div>
+
+                <!-- Currently Borrowed Tab -->
+                <div id="book-borrowed" class="tab-content">
+                    <div id="borrowed-content"></div>
+                </div>
+
+                <!-- Book History Tab -->
+                <div id="book-history" class="tab-content">
+                    <div class="filters">
+                        <input type="text" id="history-book-search" placeholder="Search book...">
+                        <button class="btn btn-secondary" onclick="searchBookHistory()">Search</button>
+                    </div>
+                    <div id="book-history-content"></div>
+                </div>
+            </section>
+
+            <!-- Loan Operations Section -->
+            <section id="loans-section" class="section">
+                <div class="section-header">
+                    <h2>📋 Mượn/Trả</h2>
+                    <button class="btn btn-secondary" onclick="loadDashboard()">Làm mới</button>
+                </div>
+
+                <div class="tabs">
+                    <button class="active" onclick="switchTab('overdue-loans', this)">Phiếu quá hạn</button>
+                    <button onclick="switchTab('active-loans', this)">Phiếu đang hoạt động</button>
+                    <button onclick="switchTab('return-book', this)">Trả sách</button>
+                </div>
+
+                <!-- Overdue Loans Tab -->
+                <div id="overdue-loans" class="tab-content active">
+                    <div id="overdue-content"></div>
+                </div>
+
+                <!-- Active Loans Tab -->
+                <div id="active-loans" class="tab-content">
+                    <div id="active-loans-content"></div>
+                </div>
+
+                <!-- Return Book Tab -->
+                <div id="return-book" class="tab-content">
+                    <div class="section-header">
+                        <h3>📌 Process Book Return</h3>
+                    </div>
+                    <div class="filters">
+                        <input type="text" id="return-search" placeholder="Search by Loan ID or Member name...">
+                        <button class="btn btn-secondary" onclick="searchReturnBook()">Search</button>
+                    </div>
+                    <div id="return-content"></div>
+                </div>
+            </section>
+
+            <!-- Monthly Statistics Section -->
+            <section id="statistics-section" class="section">
+                <div class="section-header">
+                    <h2>📈 Báo cáo thống kê tháng</h2>
+                </div>
+
+                <div class="month-selector">
+                    <select id="stats-month" onchange="loadMonthlyStatistics()">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                    <select id="stats-year" onchange="loadMonthlyStatistics()">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026" selected>2026</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadMonthlyStatistics()">Generate Report</button>
+                </div>
+
+                <div id="statistics-content">
+                    <p>Select month and year to generate report...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000/api';
+        let currentUser = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            setupNavigation();
+            
+            // Set current month in stats
+            const today = new Date();
+            document.getElementById('stats-month').value = today.getMonth() + 1;
+            document.getElementById('stats-year').value = today.getFullYear();
+        });
+
+        // Check authentication
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Fetch user info
+            fetch(`${API_BASE_URL}/auth/me`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    currentUser = data.data;
+                    document.getElementById('user-name').textContent = currentUser.username;
+                    document.getElementById('user-role').textContent = `(${currentUser.role})`;
+                    
+                    // Check if user is Librarian or Admin
+                    if (currentUser.role !== 'Librarian' && currentUser.role !== 'Admin') {
+                        alert('Access denied. This page is for Librarians only.');
+                        window.location.href = 'index.html';
+                        return;
+                    }
+
+                    // Librarian can only manage members/books/loans (no admin-style dashboard/statistics)
+                    if (currentUser.role === 'Librarian') {
+                        document.getElementById('nav-dashboard').style.display = 'none';
+                        document.getElementById('nav-statistics').style.display = 'none';
+                        document.getElementById('dashboard-section').style.display = 'none';
+                        document.getElementById('statistics-section').style.display = 'none';
+                        switchSection('members');
+                    } else {
+                        // Admin keeps full librarian dashboard experience
+                        document.getElementById('nav-dashboard').style.display = '';
+                        document.getElementById('nav-statistics').style.display = '';
+                        document.getElementById('dashboard-section').style.display = '';
+                        document.getElementById('statistics-section').style.display = '';
+                        switchSection('dashboard');
+                    }
+                } else {
+                    logout();
+                }
+            })
+            .catch(() => logout());
+        }
+
+        // Setup navigation
+        function setupNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const section = e.target.dataset.section;
+                    switchSection(section);
+                });
+            });
+        }
+
+        // Switch section
+        function switchSection(sectionName) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`${sectionName}-section`).classList.add('active');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+
+            if (sectionName === 'dashboard') {
+                loadDashboard();
+            } else if (sectionName === 'members') {
+                loadMembers();
+            } else if (sectionName === 'books') {
+                loadBooks();
+            } else if (sectionName === 'loans') {
+                loadOverdueLoans();
+            } else if (sectionName === 'statistics') {
+                loadMonthlyStatistics();
+            }
+        }
+
+        // Switch tabs
+        function switchTab(tabName, btn) {
+            document.querySelectorAll(`[id="${tabName}"]`).forEach(t => t.classList.remove('active'));
+            document.querySelector(`#${tabName}`).classList.add('active');
+            
+            document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // Load Dashboard
+        async function loadDashboard() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/librarian/dashboard`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.data;
+                    document.getElementById('stat-total-books').textContent = stats.totalBooks;
+                    document.getElementById('stat-active-loans').textContent = stats.activeLoans;
+                    document.getElementById('stat-overdue').textContent = stats.overdueLoan;
+                    document.getElementById('stat-total-members').textContent = stats.totalMembers;
+                    document.getElementById('stat-active-members').textContent = stats.activeMembers;
+                    document.getElementById('stat-borrowed-today').textContent = stats.borrowedToday;
+
+                    // Load daily report
+                    const dailyResponse = await fetch(`${API_BASE_URL}/librarian/daily-report`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const dailyData = await dailyResponse.json();
+                    if (dailyData.success) {
+                        const report = dailyData.data;
+                        document.getElementById('daily-report-content').innerHTML = `
+                            <p><strong>Date:</strong> ${new Date(dailyData.date).toLocaleDateString('vi-VN')}</p>
+                            <p><strong>Books Borrowed Today:</strong> ${report.borrowedToday}</p>
+                            <p><strong>Books Returned Today:</strong> ${report.returnedToday}</p>
+                            <p><strong>Overdue Loans:</strong> <span style="color: red;">${report.overdueCount}</span></p>
+                            <p><strong>Total Active Loans:</strong> ${report.totalActiveLoans}</p>
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert('Failed to load dashboard');
+            }
+        }
+
+        // Load Members
+        async function loadMembers() {
+            try {
+                const token = localStorage.getItem('token');
+                const search = document.getElementById('member-search')?.value || '';
+                const type = document.getElementById('member-type-filter')?.value || '';
+                const status = document.getElementById('member-status-filter')?.value || '';
+
+                const params = new URLSearchParams();
+                if (search) params.append('search', search);
+                if (type) params.append('type', type);
+                if (status) params.append('status', status);
+
+                const response = await fetch(`${API_BASE_URL}/librarian/members?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = '';
+                    data.data.forEach(member => {
+                        const statusClass = member.membershipStatus.toLowerCase();
+                        html += `
+                            <div class="member-card">
+                                <h4>${member.name}</h4>
+                                <p><strong>Email:</strong> ${member.email}</p>
+                                <p><strong>Phone:</strong> ${member.phone || 'N/A'}</p>
+                                <p><strong>Type:</strong> ${member.memberType}</p>
+                                <p><strong>Currently Borrowed:</strong> ${member.currentBorrowedCount}/${member.maxBooksAllowed}</p>
+                                <span class="status-badge ${statusClass}">${member.membershipStatus}</span>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-secondary" onclick="viewMemberHistory('${member._id}')">View History</button>
+                                    ${member.membershipStatus === 'Suspended' 
+                                        ? `<button class="btn btn-sm btn-primary" onclick="updateMemberStatus('${member._id}', 'Active')">Reactivate</button>`
+                                        : `<button class="btn btn-sm btn-warning" onclick="updateMemberStatus('${member._id}', 'Suspended')">Suspend</button>`
+                                    }
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('members-list-content').innerHTML = html || '<p>No members found</p>';
+
+                    // Suspended members
+                    const suspendedMembers = data.data.filter(m => m.membershipStatus === 'Suspended');
+                    let suspendedHtml = '';
+                    suspendedMembers.forEach(member => {
+                        suspendedHtml += `
+                            <div class="member-card">
+                                <h4>${member.name}</h4>
+                                <p><strong>Email:</strong> ${member.email}</p>
+                                <p><strong>Reason:</strong> ${member.suspensionReason || 'Not specified'}</p>
+                                <button class="btn btn-sm btn-primary" onclick="updateMemberStatus('${member._id}', 'Active')">Reactivate</button>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('suspended-content').innerHTML = suspendedHtml || '<p>No suspended members</p>';
+                }
+            } catch (error) {
+                console.error('Error loading members:', error);
+            }
+        }
+
+        // View Member History
+        async function viewMemberHistory(memberId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/librarian/members/${memberId}/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = `
+                        <h3>${data.member.name}</h3>
+                        <table style="width: 100%; margin-top: 15px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #3498db;">
+                                    <th style="padding: 10px; text-align: left;">Book</th>
+                                    <th style="padding: 10px; text-align: left;">Loan Date</th>
+                                    <th style="padding: 10px; text-align: left;">Due Date</th>
+                                    <th style="padding: 10px; text-align: left;">Return Date</th>
+                                    <th style="padding: 10px; text-align: left;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.data.forEach(loan => {
+                        html += `
+                            <tr style="border-bottom: 1px solid #ecf0f1;">
+                                <td style="padding: 10px;">${loan.book.title}</td>
+                                <td style="padding: 10px;">${new Date(loan.loanDate).toLocaleDateString('vi-VN')}</td>
+                                <td style="padding: 10px;">${new Date(loan.dueDate).toLocaleDateString('vi-VN')}</td>
+                                <td style="padding: 10px;">${loan.returnDate ? new Date(loan.returnDate).toLocaleDateString('vi-VN') : '-'}</td>
+                                <td style="padding: 10px;"><span class="status-badge ${loan.status.toLowerCase()}">${loan.status}</span></td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('history-content').innerHTML = html;
+                    switchTab('member-history', event.target);
+                }
+            } catch (error) {
+                console.error('Error loading member history:', error);
+                alert('Failed to load member history');
+            }
+        }
+
+        // Update Member Status
+        async function updateMemberStatus(memberId, status) {
+            try {
+                const reason = status === 'Suspended' ? prompt('Enter suspension reason:') : '';
+                if (status === 'Suspended' && !reason) return;
+
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/librarian/members/${memberId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status, reason: reason || undefined })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Member status updated to ${status}`);
+                    loadMembers();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error updating member status:', error);
+            }
+        }
+
+        // Load Books
+        async function loadBooks() {
+            try {
+                const token = localStorage.getItem('token');
+                const search = document.getElementById('book-search')?.value || '';
+                const category = document.getElementById('book-category-filter')?.value || '';
+
+                const params = new URLSearchParams();
+                if (search) params.append('search', search);
+                if (category) params.append('category', category);
+
+                const response = await fetch(`${API_BASE_URL}/librarian/books?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = '';
+                    data.data.forEach(book => {
+                        html += `
+                            <div class="book-card">
+                                <h4>${book.title}</h4>
+                                <p><strong>Author:</strong> ${book.author}</p>
+                                <p><strong>ISBN:</strong> ${book.isbn}</p>
+                                <p><strong>Category:</strong> ${book.category}</p>
+                                <p><strong>Inventory:</strong> Total: ${book.totalCopies}, Currently Borrowed: ${book.currentlyBorrowed}</p>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-secondary" onclick="viewBookHistory('${book._id}')">View History</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('books-list-content').innerHTML = html || '<p>No books found</p>';
+                }
+            } catch (error) {
+                console.error('Error loading books:', error);
+            }
+        }
+
+        // View Book History
+        async function viewBookHistory(bookId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/librarian/books/${bookId}/history`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    let html = `
+                        <h3>${data.book.title}</h3>
+                        <p><strong>Author:</strong> ${data.book.author}</p>
+                        <table style="width: 100%; margin-top: 15px;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid #3498db;">
+                                    <th style="padding: 10px; text-align: left;">Member</th>
+                                    <th style="padding: 10px; text-align: left;">Loan Date</th>
+                                    <th style="padding: 10px; text-align: left;">Due Date</th>
+                                    <th style="padding: 10px; text-align: left;">Return Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.data.forEach(loan => {
+                        html += `
+                            <tr style="border-bottom: 1px solid #ecf0f1;">
+                                <td style="padding: 10px;">${loan.member.name}</td>
+                                <td style="padding: 10px;">${new Date(loan.loanDate).toLocaleDateString('vi-VN')}</td>
+                                <td style="padding: 10px;">${new Date(loan.dueDate).toLocaleDateString('vi-VN')}</td>
+                                <td style="padding: 10px;">${loan.returnDate ? new Date(loan.returnDate).toLocaleDateString('vi-VN') : '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('book-history-content').innerHTML = html;
+                    switchTab('book-history', event.target);
+                }
+            } catch (error) {
+                console.error('Error loading book history:', error);
+                alert('Failed to load book history');
+            }
+        }
+
+        // Load Overdue Loans
+        async function loadOverdueLoans() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/librarian/overdue-loans`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    let html = `<div class="overdue-alert">⚠️ ${data.count} overdue loan(s) found!</div>`;
+                    html += '<table style="width: 100%; margin-top: 15px;"><thead><tr style="border-bottom: 2px solid #e74c3c;"><th style="padding: 10px; text-align: left;">Member</th><th style="padding: 10px; text-align: left;">Book</th><th style="padding: 10px; text-align: left;">Due Date</th><th style="padding: 10px; text-align: left;">Days Overdue</th><th style="padding: 10px; text-align: left;">Action</th></tr></thead><tbody>';
+                    
+                    data.data.forEach(loan => {
+                        const daysOverdue = Math.floor((new Date() - new Date(loan.dueDate)) / (1000 * 60 * 60 * 24));
+                        html += `
+                            <tr style="border-bottom: 1px solid #ecf0f1;">
+                                <td style="padding: 10px;">${loan.member.name}</td>
+                                <td style="padding: 10px;">${loan.book.title}</td>
+                                <td style="padding: 10px;">${new Date(loan.dueDate).toLocaleDateString('vi-VN')}</td>
+                                <td style="padding: 10px; color: red;"><strong>${daysOverdue} days</strong></td>
+                                <td style="padding: 10px;">
+                                    <button class="btn btn-sm btn-primary" onclick="extendLoan('${loan._id}')">Extend</button>
+                                    <button class="btn btn-sm btn-success" onclick="processReturn('${loan._id}')">Mark Returned</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('overdue-content').innerHTML = html;
+                } else {
+                    document.getElementById('overdue-content').innerHTML = '<p>✅ No overdue loans!</p>';
+                }
+            } catch (error) {
+                console.error('Error loading overdue loans:', error);
+            }
+        }
+
+        // Process Return
+        async function processReturn(loanId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/librarian/return-book/${loanId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Book returned successfully!');
+                    loadOverdueLoans();
+                    loadDashboard();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error processing return:', error);
+            }
+        }
+
+        // Extend Loan
+        async function extendLoan(loanId) {
+            try {
+                const days = prompt('Extend by how many days? (default: 7)', '7');
+                if (!days) return;
+
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/librarian/extend-loan/${loanId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ days: parseInt(days) })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    alert(`Loan extended by ${days} days!`);
+                    loadOverdueLoans();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error extending loan:', error);
+            }
+        }
+
+        // Load Monthly Statistics
+        async function loadMonthlyStatistics() {
+            try {
+                const token = localStorage.getItem('token');
+                const month = document.getElementById('stats-month').value;
+                const year = document.getElementById('stats-year').value;
+
+                const response = await fetch(`${API_BASE_URL}/librarian/statistics/monthly?month=${month}&year=${year}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const stats = data.data;
+                    const monthName = new Date(year, month - 1).toLocaleDateString('vi-VN', { month: 'long', year: 'numeric' });
+                    
+                    let html = `
+                        <div class="monthly-report">
+                            <h3>Report for ${monthName}</h3>
+                            
+                            <div class="report-section">
+                                <h4>Borrowing Statistics</h4>
+                                <p><strong>Books Borrowed:</strong> ${stats.borrowedThisMonth}</p>
+                                <p><strong>Books Returned:</strong> ${stats.returnedThisMonth}</p>
+                                <p><strong>Overdue Loans:</strong> <span style="color: red;">${stats.overdueThisMonth}</span></p>
+                                <p><strong>New Members:</strong> ${stats.newMembers}</p>
+                            </div>
+
+                            <div class="report-section">
+                                <h4>Top 5 Borrowed Books</h4>
+                                <ul class="top-list">
+                    `;
+                    
+                    stats.topBooks.forEach(book => {
+                        html += `<li><span>${book.title} by ${book.author}</span><span class="count">${book.borrowCount} times</span></li>`;
+                    });
+                    
+                    html += `
+                                </ul>
+                            </div>
+
+                            <div class="report-section">
+                                <h4>Top 5 Active Members</h4>
+                                <ul class="top-list">
+                    `;
+                    
+                    stats.activeMembers.forEach(member => {
+                        html += `<li><span>${member.name} (${member.email})</span><span class="count">${member.loanCount} loans</span></li>`;
+                    });
+                    
+                    html += `
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('statistics-content').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+                alert('Failed to load statistics');
+            }
+        }
+
+        // Search functions
+        function searchMemberHistory() {
+            // Placeholder - can be implemented if needed
+        }
+
+        function searchBookHistory() {
+            // Placeholder - can be implemented if needed
+        }
+
+        function searchReturnBook() {
+            // Placeholder - can be implemented if needed
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('token');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

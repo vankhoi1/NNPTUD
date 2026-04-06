@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ thống Quản lý Thư viện</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>Hệ thống Quản lý Thư viện</h1>
+                <div class="user-info" id="user-info" style="display: none;">
+                    <span id="user-name"></span>
+                    <span class="user-role" id="user-role"></span>
+                    <button class="btn btn-sm btn-secondary" onclick="logout()">Đăng xuất</button>
+                </div>
+            </div>
+            <nav>
+                <button class="nav-btn active" data-section="books">Sách</button>
+                <button class="nav-btn" data-section="members">Độc giả</button>
+                <button class="nav-btn" data-section="loans">Mượn/Trả</button>
+                <button class="nav-btn" data-section="reservations" id="reservations-nav" style="display: none;">Đặt mượn</button>
+                <button class="nav-btn" data-section="notifications" id="notifications-nav" style="display: none;">Thông báo</button>
+                <button class="nav-btn" data-section="fines" id="fines-nav" style="display: none;">Tiền phạt</button>
+                <button class="nav-btn" data-section="reviews" id="reviews-nav" style="display: none;">Đánh giá</button>
+                <button class="nav-btn" data-section="chat" id="chat-nav" style="display: none;">Chat</button>
+                <button class="nav-btn" data-section="profile" id="profile-nav" style="display: none;">Hồ sơ của tôi</button>
+                <button class="nav-btn" data-section="users" id="users-nav" style="display: none;">Người dùng</button>
+                <button class="nav-btn" data-section="statistics" id="statistics-nav" style="display: none;">Thống kê</button>
+                <button class="nav-btn" data-section="support-tickets" id="support-tickets-nav" style="display: none;">Hỗ trợ</button>
+                <button class="nav-btn" data-section="loan-status-history" id="loan-status-history-nav" style="display: none;">Lịch sử trạng thái</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Books Section -->
+            <section id="books-section" class="section active">
+                <div class="section-header">
+                    <h2>Quản lý sách</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="add-book-btn" onclick="openBookModal()" style="display: none;">Thêm sách</button>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="book-search" placeholder="Tìm theo tên sách hoặc tác giả...">
+                    <select id="book-category-filter">
+                        <option value="">Tất cả thể loại</option>
+                        <option value="Fiction">Fiction</option>
+                        <option value="Non-Fiction">Non-Fiction</option>
+                        <option value="Science">Science</option>
+                        <option value="Technology">Technology</option>
+                        <option value="History">History</option>
+                        <option value="Biography">Biography</option>
+                        <option value="Children">Children</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <label>
+                        <input type="checkbox" id="book-available-only"> Chỉ còn sách
+                    </label>
+                    <button class="btn btn-secondary" onclick="loadBooks()">Lọc</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="books-table">
+                        <thead>
+                            <tr>
+                                <th>Tên sách</th>
+                                <th>Tác giả</th>
+                                <th>ISBN</th>
+                                <th>Thể loại</th>
+                                <th>Tổng số</th>
+                                <th>Còn lại</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="books-pagination"></div>
+            </section>
+
+            <!-- Members Section -->
+            <section id="members-section" class="section">
+                <div class="section-header">
+                    <h2>Quản lý độc giả</h2>
+                    <button class="btn btn-primary" id="add-member-btn" onclick="openMemberModal()" style="display: none;">Thêm độc giả</button>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="member-search" placeholder="Tìm theo tên hoặc email...">
+                    <select id="member-type-filter">
+                        <option value="">Tất cả loại</option>
+                        <option value="Student">Student</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Staff">Staff</option>
+                        <option value="External">External</option>
+                    </select>
+                    <select id="member-status-filter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Suspended">Suspended</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadMembers()">Lọc</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="members-table">
+                        <thead>
+                            <tr>
+                                <th>Họ tên</th>
+                                <th>Email</th>
+                                <th>SĐT</th>
+                                <th>Loại</th>
+                                <th>Trạng thái</th>
+                                <th>Đang mượn</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="members-pagination"></div>
+            </section>
+
+            <!-- Loans Section -->
+            <section id="loans-section" class="section">
+                <div class="section-header">
+                    <h2>Quản lý mượn trả</h2>
+                    <button class="btn btn-secondary" onclick="loadOverdueLoans()">Chỉ hiển thị quá hạn</button>
+                </div>
+                
+                <div class="filters">
+                    <select id="loan-status-filter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Pending">Chờ duyệt</option>
+                        <option value="Borrowed">Đang mượn</option>
+                        <option value="Returned">Đã trả</option>
+                        <option value="Overdue">Quá hạn</option>
+                        <option value="Rejected">Từ chối</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadLoans()">Lọc</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="loans-table">
+                        <thead>
+                            <tr>
+                                <th>Sách</th>
+                                <th>Độc giả</th>
+                                <th>Ngày mượn</th>
+                                <th>Hạn trả</th>
+                                <th>Ngày trả</th>
+                                <th>Trạng thái</th>
+                                <th>Tiền phạt</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="loans-pagination"></div>
+            </section>
+
+            <!-- Reservations Section -->
+            <section id="reservations-section" class="section">
+                <div class="section-header">
+                    <h2>Đặt mượn sách</h2>
+                    <button class="btn btn-secondary" onclick="loadReservations()">Làm mới</button>
+                </div>
+
+                <div id="reservation-create-wrapper" style="display: none;">
+                    <div class="filters">
+                        <select id="reservation-book-select" style="min-width: 280px;">
+                            <option value="">Chọn sách đã hết</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="createReservation()">Gửi yêu cầu</button>
+                    </div>
+                    <div class="table-container" style="padding: 20px;">
+                        <p style="margin: 0 0 10px 0; color: #666;">Chỉ có thể đặt trước khi sách đã hết.</p>
+                        <textarea id="reservation-notes" rows="3" placeholder="Ghi chú (tuỳ chọn)" style="width: 100%;"></textarea>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-top: 20px;">
+                    <h3 style="padding: 18px 20px 0 20px; margin: 0;">Danh sách đặt mượn</h3>
+                    <div id="reservations-list" style="padding: 20px;"></div>
+                </div>
+            </section>
+
+            <!-- Notifications Section -->
+            <section id="notifications-section" class="section">
+                <div class="section-header">
+                    <h2>Thông báo</h2>
+                    <button class="btn btn-secondary" onclick="loadNotifications()">Làm mới</button>
+                </div>
+
+                <div class="table-container">
+                    <div id="notifications-list" style="padding: 20px;"></div>
+                </div>
+            </section>
+
+            <!-- Fines Section -->
+            <section id="fines-section" class="section">
+                <div class="section-header">
+                    <h2>Tiền phạt</h2>
+                    <button class="btn btn-secondary" onclick="loadFines()">Làm mới</button>
+                </div>
+
+                <div class="table-container" style="padding: 20px;">
+                    <div id="fine-payment-area" style="display: none;">
+                        <h3 style="margin-bottom: 15px;">Thanh toán phạt</h3>
+                        <div class="filters" style="margin-bottom: 10px;">
+                            <select id="fineId-select" style="min-width: 320px;"></select>
+                            <input type="number" id="fine-payment-amount" placeholder="Số tiền" min="0" />
+                            <select id="fine-payment-method">
+                                <option value="Cash">Cash</option>
+                                <option value="Transfer">Transfer</option>
+                                <option value="Card">Card</option>
+                                <option value="Other">Other</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="createFinePayment()">Thanh toán</button>
+                        </div>
+                        <textarea id="fine-payment-note" rows="2" placeholder="Ghi chú (tuỳ chọn)" style="width: 100%;"></textarea>
+                    </div>
+
+                    <div id="fines-list" style="margin-top: 15px;"></div>
+                </div>
+            </section>
+
+            <!-- Reviews Section -->
+            <section id="reviews-section" class="section">
+                <div class="section-header">
+                    <h2>Đánh giá</h2>
+                    <button class="btn btn-secondary" onclick="loadReviews()">Làm mới</button>
+                </div>
+
+                <div id="review-create-wrapper" style="display: none;">
+                    <div class="filters">
+                        <select id="review-book-select" style="min-width: 280px;"></select>
+                        <select id="review-rating">
+                            <option value="5">5 sao</option>
+                            <option value="4">4 sao</option>
+                            <option value="3">3 sao</option>
+                            <option value="2">2 sao</option>
+                            <option value="1">1 sao</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="createReview()">Gửi đánh giá</button>
+                    </div>
+                    <div class="table-container" style="padding: 20px;">
+                        <textarea id="review-comment" rows="3" placeholder="Nhận xét của bạn..." style="width: 100%;"></textarea>
+                    </div>
+                </div>
+
+                <div class="table-container" style="margin-top: 20px;">
+                    <div id="reviews-list" style="padding: 20px;"></div>
+                </div>
+            </section>
+
+            <!-- Upload Section (removed) -->
+            <section id="upload-section" class="section" style="display: none;">
+                <div class="section-header">
+                    <h2>Upload & Tìm kiếm bằng ảnh</h2>
+                </div>
+
+                <div class="table-container" style="padding: 20px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 12px;">Tìm sách theo ảnh (mock)</h3>
+                    <div class="filters">
+                        <input type="file" id="search-image-input" accept="image/*" />
+                        <button class="btn btn-primary" onclick="searchByImage()">Tìm</button>
+                    </div>
+                    <div id="image-search-results" style="margin-top: 15px;"></div>
+                </div>
+
+                <!-- Book image upload removed -->
+            </section>
+
+            <!-- Chat Section -->
+            <section id="chat-section" class="section">
+                <div class="section-header">
+                    <h2>Chat (socket)</h2>
+                </div>
+
+                <div class="filters">
+                    <input type="text" id="chat-room-id" value="public" placeholder="Room id (mặc định: public)" style="min-width: 300px;" />
+                    <button class="btn btn-secondary" onclick="connectAndLoadChat()">Kết nối</button>
+                    <small id="chat-connection-status" style="margin-left: 10px; color: #666;">Chưa kết nối</small>
+                </div>
+
+                <div class="table-container" style="padding: 20px;">
+                    <div id="chat-messages" style="max-height: 320px; overflow: auto;"></div>
+                    <div class="filters" style="margin-top: 15px;">
+                        <input type="text" id="chat-content" placeholder="Nhập nội dung..." style="min-width: 320px;" />
+                        <button class="btn btn-primary" onclick="sendChatMessage()">Gửi</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile-section" class="section">
+                <div class="section-header">
+                    <h2>Hồ sơ của tôi</h2>
+                </div>
+                <div id="profile-content">
+                    <p>Loading profile...</p>
+                </div>
+            </section>
+
+            <!-- Users Management Section (Admin only) -->
+            <section id="users-section" class="section">
+                <div class="section-header">
+                    <h2>Quản lý người dùng</h2>
+                    <button class="btn btn-primary" onclick="openCreateUserModal()">Tạo tài khoản thủ thư</button>
+                </div>
+                <div class="search-filters">
+                    <input type="text" id="users-search" placeholder="Tìm theo tên đăng nhập hoặc email">
+                    <select id="users-role-filter">
+                        <option value="">Tất cả vai trò</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Librarian">Librarian</option>
+                        <option value="Reader">Reader</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadUsers()">Lọc</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tên đăng nhập</th>
+                                <th>Email</th>
+                                <th>Vai trò</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="users-pagination"></div>
+            </section>
+
+            <!-- Statistics Section (Admin only) -->
+            <section id="statistics-section" class="section">
+                <div class="section-header">
+                    <h2>Thống kê thư viện</h2>
+                    <div class="header-actions">
+                        <div class="date-selector">
+                            <select id="stats-month" onchange="loadStatistics()">
+                                <option value="1">Tháng 1</option>
+                                <option value="2">Tháng 2</option>
+                                <option value="3">Tháng 3</option>
+                                <option value="4">Tháng 4</option>
+                                <option value="5">Tháng 5</option>
+                                <option value="6">Tháng 6</option>
+                                <option value="7">Tháng 7</option>
+                                <option value="8">Tháng 8</option>
+                                <option value="9">Tháng 9</option>
+                                <option value="10">Tháng 10</option>
+                                <option value="11">Tháng 11</option>
+                                <option value="12">Tháng 12</option>
+                            </select>
+                            <select id="stats-year" onchange="loadStatistics()">
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026" selected>2026</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" onclick="exportStatistics()">Xuất báo cáo</button>
+                    </div>
+                </div>
+                
+                <div id="statistics-content">
+                    <div class="stats-loading">
+                        <div class="loading-spinner"></div>
+                        <p>Đang tải dữ liệu thống kê...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Support Tickets Section -->
+            <section id="support-tickets-section" class="section">
+                <div class="section-header">
+                    <h2>Quản lý yêu cầu hỗ trợ</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="add-support-ticket-btn" onclick="openSupportTicketModal()" style="display: none;">Tạo yêu cầu hỗ trợ</button>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="support-ticket-search" placeholder="Tìm theo tiêu đề hoặc mô tả...">
+                    <select id="support-ticket-status-filter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Open">Mở</option>
+                        <option value="In Progress">Đang xử lý</option>
+                        <option value="Resolved">Đã giải quyết</option>
+                        <option value="Closed">Đã đóng</option>
+                    </select>
+                    <select id="support-ticket-priority-filter">
+                        <option value="">Tất cả mức độ ưu tiên</option>
+                        <option value="Low">Thấp</option>
+                        <option value="Medium">Trung bình</option>
+                        <option value="High">Cao</option>
+                        <option value="Critical">Rất cao</option>
+                    </select>
+                    <select id="support-ticket-category-filter">
+                        <option value="">Tất cả danh mục</option>
+                        <option value="Technical">Kỹ thuật</option>
+                        <option value="Account">Tài khoản</option>
+                        <option value="Billing">Thanh toán</option>
+                        <option value="Content">Nội dung</option>
+                        <option value="Other">Khác</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadSupportTickets()">Lọc</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="support-tickets-table">
+                        <thead>
+                            <tr>
+                                <th>Tiêu đề</th>
+                                <th>Người tạo</th>
+                                <th>Danh mục</th>
+                                <th>Ưu tiên</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="support-tickets-body">
+                            <!-- Support tickets will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="support-tickets-pagination">
+                    <button class="btn btn-sm" onclick="changeSupportTicketsPage(-1)" disabled>Trước</button>
+                    <span id="support-tickets-page-info">Trang 1 / 1</span>
+                    <button class="btn btn-sm" onclick="changeSupportTicketsPage(1)" disabled>Tiếp</button>
+                </div>
+            </section>
+
+            <!-- Tags Section (removed) -->
+            <section id="tags-section" class="section" style="display: none;">
+                <div class="section-header">
+                    <h2>Quản lý thẻ (Tags)</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" id="add-tag-btn" onclick="openTagModal()" style="display: none;">Thêm thẻ</button>
+                        <button class="btn btn-secondary" id="bulk-add-tags-btn" onclick="openBulkTagModal()" style="display: none;">Thêm nhiều thẻ</button>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="tag-search" placeholder="Tìm theo tên thẻ...">
+                    <select id="tag-sort-filter">
+                        <option value="bookCount">Sắp xếp theo: Số sách (giảm dần)</option>
+                        <option value="name">Sắp xếp theo: Tên (A-Z)</option>
+                        <option value="nameDesc">Sắp xếp theo: Tên (Z-A)</option>
+                        <option value="bookCountAsc">Sắp xếp theo: Số sách (tăng dần)</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="loadTags()">Lọc</button>
+                </div>
+                
+                <div class="tags-container" id="tags-container">
+                    <!-- Tags will be loaded here as cards -->
+                    <div class="loading-spinner"></div>
+                    <p>Đang tải thẻ...</p>
+                </div>
+                
+                <div class="pagination" id="tags-pagination">
+                    <button class="btn btn-sm" onclick="changeTagsPage(-1)" disabled>Trước</button>
+                    <span id="tags-page-info">Trang 1 / 1</span>
+                    <button class="btn btn-sm" onclick="changeTagsPage(1)" disabled>Tiếp</button>
+                </div>
+            </section>
+
+            <!-- Loan Status History Section -->
+            <section id="loan-status-history-section" class="section">
+                <div class="section-header">
+                    <h2>Lịch sử trạng thái mượn sách</h2>
+                    <div class="header-actions"></div>
+                </div>
+                
+                <div class="filters">
+                    <input type="text" id="loan-status-history-search" placeholder="Tìm theo ID mượn...">
+                    <select id="loan-status-history-status-filter">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Pending">Chờ duyệt</option>
+                        <option value="Approved">Đã duyệt</option>
+                        <option value="Active">Đang mượn</option>
+                        <option value="Overdue">Quá hạn</option>
+                        <option value="Returned">Đã trả</option>
+                        <option value="Cancelled">Đã hủy</option>
+                    </select>
+                    <input type="date" id="loan-status-history-start-date" placeholder="Từ ngày">
+                    <input type="date" id="loan-status-history-end-date" placeholder="Đến ngày">
+                    <button class="btn btn-secondary" onclick="loadLoanStatusHistory()">Lọc</button>
+                </div>
+                
+                <div class="table-container">
+                    <table id="loan-status-history-table">
+                        <thead>
+                            <tr>
+                                <th>ID Mượn</th>
+                                <th>Sách</th>
+                                <th>Trạng thái trước</th>
+                                <th>Trạng thái sau</th>
+                                <th>Người thay đổi</th>
+                                <th>Thời gian thay đổi</th>
+                                <th>Ghi chú</th>
+                                <th>Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loan-status-history-body">
+                            <!-- Loan status history will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="pagination" id="loan-status-history-pagination">
+                    <button class="btn btn-sm" onclick="changeLoanStatusHistoryPage(-1)" disabled>Trước</button>
+                    <span id="loan-status-history-page-info">Trang 1 / 1</span>
+                    <button class="btn btn-sm" onclick="changeLoanStatusHistoryPage(1)" disabled>Tiếp</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Book Modal -->
+    <div id="book-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="book-modal-title">Add New Book</h3>
+                <button class="close-btn" onclick="closeBookModal()">&times;</button>
+            </div>
+            <form id="book-form">
+                <input type="hidden" id="book-id">
+                <div class="form-group">
+                    <label for="book-title">Title *</label>
+                    <input type="text" id="book-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="book-author">Author *</label>
+                    <input type="text" id="book-author" required>
+                </div>
+                <div class="form-group">
+                    <label for="book-isbn">ISBN *</label>
+                    <input type="text" id="book-isbn" required>
+                </div>
+                <div class="form-group">
+                    <label for="book-category">Category *</label>
+                    <select id="book-category" required>
+                        <option value="">Select Category</option>
+                        <option value="Fiction">Fiction</option>
+                        <option value="Non-Fiction">Non-Fiction</option>
+                        <option value="Science">Science</option>
+                        <option value="Technology">Technology</option>
+                        <option value="History">History</option>
+                        <option value="Biography">Biography</option>
+                        <option value="Children">Children</option>
+                        <option value="Education">Education</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="book-total-copies">Total Copies *</label>
+                    <input type="number" id="book-total-copies" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="book-publisher">Publisher</label>
+                    <input type="text" id="book-publisher">
+                </div>
+                <div class="form-group">
+                    <label for="book-publish-year">Publish Year</label>
+                    <input type="number" id="book-publish-year" min="1800" max="2025">
+                </div>
+                <div class="form-group">
+                    <label for="book-description">Description</label>
+                    <textarea id="book-description" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBookModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Member Modal -->
+    <div id="member-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="member-modal-title">Add New Member</h3>
+                <button class="close-btn" onclick="closeMemberModal()">&times;</button>
+            </div>
+            <form id="member-form">
+                <input type="hidden" id="member-id">
+                <div class="form-group">
+                    <label for="member-name">Name *</label>
+                    <input type="text" id="member-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="member-email">Email *</label>
+                    <input type="email" id="member-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="member-phone">Phone *</label>
+                    <input type="text" id="member-phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="member-address">Address</label>
+                    <textarea id="member-address" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="member-type">Member Type *</label>
+                    <select id="member-type" required>
+                        <option value="">Select Type</option>
+                        <option value="Student">Student</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Staff">Staff</option>
+                        <option value="External">External</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="member-status">Status *</label>
+                    <select id="member-status" required>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="Suspended">Suspended</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="member-max-books">Max Books Allowed *</label>
+                    <input type="number" id="member-max-books" min="1" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeMemberModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loan Modal -->
+    <div id="loan-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="loan-modal-title">Create New Loan</h3>
+                <button class="close-btn" onclick="closeLoanModal()">&times;</button>
+            </div>
+            <form id="loan-form">
+                <input type="hidden" id="loan-id">
+                <div class="form-group">
+                    <label for="loan-book">Book *</label>
+                    <select id="loan-book" required>
+                        <option value="">Select Book</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loan-member">Member *</label>
+                    <select id="loan-member" required>
+                        <option value="">Select Member</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loan-due-date">Due Date *</label>
+                    <input type="date" id="loan-due-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="loan-notes">Notes</label>
+                    <textarea id="loan-notes" rows="2"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeLoanModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Loan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Action</h3>
+                <button class="close-btn" onclick="closeConfirmModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message"></p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeConfirmModal()">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Dang nhap</h3>
+                <button class="close-btn" onclick="closeLoginModal()">&times;</button>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-identifier">Ten dang nhap hoac Email *</label>
+                    <input type="text" id="login-identifier" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Mat khau *</label>
+                    <input type="password" id="login-password" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeLoginModal()">Huy</button>
+                    <button type="submit" class="btn btn-primary">Dang nhap</button>
+                </div>
+            </form>
+            <p class="modal-footer-text">
+                Chua co tai khoan? <a href="#" onclick="openRegisterModal()">Dang ky tai day</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Dang ky</h3>
+                <button class="close-btn" onclick="closeRegisterModal()">&times;</button>
+            </div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-username">Ten dang nhap *</label>
+                    <input type="text" id="register-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email *</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Mat khau *</label>
+                    <input type="password" id="register-password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="register-role">Vai tro *</label>
+                    <select id="register-role" required>
+                        <option value="Reader">Reader (Doc gia)</option>
+                    </select>
+                </div>
+                <div class="form-group" id="member-id-group">
+                    <label for="register-member-id">Ma doc gia <small>(khong bat buoc)</small></label>
+                    <input type="text" id="register-member-id" placeholder="De trong de tu dong tao">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeRegisterModal()">Huy</button>
+                    <button type="submit" class="btn btn-primary">Dang ky</button>
+                </div>
+            </form>
+            <p class="modal-footer-text">
+                Da co tai khoan? <a href="#" onclick="openLoginModal()">Dang nhap tai day</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Borrow Book Modal (for Readers) -->
+    <div id="borrow-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Yêu cầu mượn sách</h3>
+                <button class="close-btn" onclick="closeBorrowModal()">&times;</button>
+            </div>
+            <form id="borrow-form">
+                <input type="hidden" id="borrow-book-id">
+                <div class="form-group">
+                    <label for="borrow-book-title">Sách</label>
+                    <input type="text" id="borrow-book-title" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="borrow-due-date">Hạn trả dự kiến *</label>
+                    <input type="date" id="borrow-due-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="borrow-notes">Ghi chú</label>
+                    <textarea id="borrow-notes" rows="2"></textarea>
+                </div>
+                <p class="form-note">Yêu cầu của bạn sẽ được gửi đến thủ thư để duyệt. Sách chỉ được cấp phát khi bạn đến thư viện và nhận sách.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBorrowModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Gửi yêu cầu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pending Loans Modal (for Librarians) -->
+    <div id="pending-loans-modal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3>Duyệt yêu cầu mượn sách</h3>
+                <button class="close-btn" onclick="closePendingLoansModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="pending-loans-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Management Modal -->
+    <div id="user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUserModal()">&times;</span>
+            <h2 id="user-modal-title">Tạo tài khoản thủ thư</h2>
+            <form id="user-form">
+                <div class="form-group">
+                    <label for="user-username">Username *</label>
+                    <input type="text" id="user-username" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-email">Email *</label>
+                    <input type="email" id="user-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-password">Password *</label>
+                    <input type="password" id="user-password" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label for="user-role">Role *</label>
+                    <select id="user-role" required>
+                        <option value="Librarian">Thủ thư</option>
+                        <option value="Admin">Quản trị</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Support Ticket Modal -->
+    <div id="support-ticket-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="support-ticket-modal-title">Tạo yêu cầu hỗ trợ</h3>
+                <button class="close-btn" onclick="closeSupportTicketModal()">&times;</button>
+            </div>
+            <form id="support-ticket-form">
+                <input type="hidden" id="support-ticket-id">
+                <div class="form-group">
+                    <label for="support-ticket-title">Tiêu đề *</label>
+                    <input type="text" id="support-ticket-title" required maxlength="200">
+                </div>
+                <div class="form-group">
+                    <label for="support-ticket-description">Mô tả chi tiết *</label>
+                    <textarea id="support-ticket-description" rows="4" required maxlength="2000"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="support-ticket-category">Danh mục *</label>
+                    <select id="support-ticket-category" required>
+                        <option value="">Chọn danh mục</option>
+                        <option value="Technical">Kỹ thuật</option>
+                        <option value="Account">Tài khoản</option>
+                        <option value="Billing">Thanh toán</option>
+                        <option value="Content">Nội dung</option>
+                        <option value="Other">Khác</option>
+                    </select>
+                </div>
+                <div class="form-group" id="support-ticket-priority-group">
+                    <label for="support-ticket-priority">Mức độ ưu tiên *</label>
+                    <select id="support-ticket-priority" required>
+                        <option value="Medium">Trung bình</option>
+                        <option value="Low">Thấp</option>
+                        <option value="High">Cao</option>
+                        <option value="Critical">Rất cao</option>
+                    </select>
+                </div>
+                <div class="form-group" id="support-ticket-status-group" style="display: none;">
+                    <label for="support-ticket-status">Trạng thái *</label>
+                    <select id="support-ticket-status">
+                        <option value="Open">Mở</option>
+                        <option value="In Progress">Đang xử lý</option>
+                        <option value="Resolved">Đã giải quyết</option>
+                        <option value="Closed">Đã đóng</option>
+                    </select>
+                </div>
+                <div class="form-group" id="support-ticket-assigned-to-group" style="display: none;">
+                    <label for="support-ticket-assigned-to">Giao cho</label>
+                    <select id="support-ticket-assigned-to">
+                        <option value="">Chưa giao</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeSupportTicketModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tag Modal -->
+    <div id="tag-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="tag-modal-title">Thêm thẻ mới</h3>
+                <button class="close-btn" onclick="closeTagModal()">&times;</button>
+            </div>
+            <form id="tag-form">
+                <input type="hidden" id="tag-id">
+                <div class="form-group">
+                    <label for="tag-name">Tên thẻ *</label>
+                    <input type="text" id="tag-name" required maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="tag-description">Mô tả</label>
+                    <textarea id="tag-description" rows="3" maxlength="200"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="tag-color">Màu sắc</label>
+                    <input type="color" id="tag-color" value="#6c757d">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeTagModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bulk Tag Modal -->
+    <div id="bulk-tag-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Thêm nhiều thẻ cùng lúc</h3>
+                <button class="close-btn" onclick="closeBulkTagModal()">&times;</button>
+            </div>
+            <form id="bulk-tag-form">
+                <div class="form-group">
+                    <label for="bulk-tag-data">Nhập thẻ (mỗi thẻ một dòng, định dạng: Tên thẻ|Mô tả|Màu sắc)</label>
+                    <textarea id="bulk-tag-data" rows="10" placeholder="Ví dụ:
+Sách mới|Sách mới nhập về|#4CAF50
+Best seller|Sách bán chạy nhất|#FF9800
+Giảm giá|Sách đang giảm giá|#2196F3"></textarea>
+                    <small class="form-help">Màu sắc có thể bỏ trống (mặc định: #6c757d)</small>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeBulkTagModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm thẻ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loan Status History Modal -->
+    <div id="loan-status-history-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="loan-status-history-modal-title">Thêm lịch sử trạng thái</h3>
+                <button class="close-btn" onclick="closeLoanStatusHistoryModal()">&times;</button>
+            </div>
+            <form id="loan-status-history-form">
+                <input type="hidden" id="loan-status-history-id">
+                <div class="form-group">
+                    <label for="loan-status-history-loan">Mượn sách *</label>
+                    <select id="loan-status-history-loan" required>
+                        <option value="">Chọn mượn sách</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loan-status-history-previous-status">Trạng thái trước</label>
+                    <select id="loan-status-history-previous-status">
+                        <option value="">Không xác định</option>
+                        <option value="Pending">Chờ duyệt</option>
+                        <option value="Approved">Đã duyệt</option>
+                        <option value="Active">Đang mượn</option>
+                        <option value="Overdue">Quá hạn</option>
+                        <option value="Returned">Đã trả</option>
+                        <option value="Cancelled">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loan-status-history-status">Trạng thái mới *</label>
+                    <select id="loan-status-history-status" required>
+                        <option value="Pending">Chờ duyệt</option>
+                        <option value="Approved">Đã duyệt</option>
+                        <option value="Active">Đang mượn</option>
+                        <option value="Overdue">Quá hạn</option>
+                        <option value="Returned">Đã trả</option>
+                        <option value="Cancelled">Đã hủy</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="loan-status-history-notes">Ghi chú</label>
+                    <textarea id="loan-status-history-notes" rows="3" maxlength="500"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeLoanStatusHistoryModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="loan-status-history-submit">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.8.3/socket.io.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
